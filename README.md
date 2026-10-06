@@ -158,6 +158,19 @@ cd agent && python -m pytest -q    # 109 个
 覆盖重点包括注入攻击拒绝、沙箱环境变量不泄漏、防护机制边界场景、
 轨迹往返一致、配置空值回退、以及「礼貌拒答不能算成功」这类判据陷阱。
 
+### 如果你也在国内网络环境下开发
+
+本项目在开发过程中实际踩到的三个环境问题，记录下来省你时间：
+
+| 现象 | 原因 | 解法 |
+| --- | --- | --- |
+| `pip install -r requirements.txt` 报 `UnicodeDecodeError: 'gbk' codec` | requirements 里有中文注释，pip 用系统默认编码读取 | `$env:PYTHONUTF8=1; $env:PYTHONIOENCODING='utf-8'` |
+| 装不上 `langchain`（`No matching distribution`） | 清华 TUNA 镜像当前无法解析该包（实测） | 换源 `-i https://mirrors.aliyun.com/pypi/simple/` |
+| `git push` 报 `schannel: server closed abruptly` 或连接超时 | 系统走了本地代理，但 git 没配 | `git config --global http.proxy http://127.0.0.1:<端口>` |
+
+> 第三条的判断方法：如果浏览器能打开 GitHub 但 `git` 连不上，
+> 查一下系统代理（`HKCU:\...\Internet Settings` 的 `ProxyServer`）并给 git 配上同一个。
+
 ---
 
 ## 七、已知局限
