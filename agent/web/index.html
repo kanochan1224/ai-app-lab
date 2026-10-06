@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AgentLab · 工具调用 Agent 实验台</title>
+<style>
+  :root {
+    --bg:#0f1117; --panel:#171a23; --panel2:#1e222d; --border:#2a2f3d;
+    --text:#e6e9f0; --muted:#8b93a7; --accent:#4c8dff; --accent-dim:#2b4f8f;
+    --ok:#35c07f; --warn:#e0a33e; --err:#e0605e; --guard:#b39dff;
+    --mono:"Cascadia Code","Consolas","Menlo",monospace;
+    --radius:10px;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column;
+         font:15px/1.65 -apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif; }
+  header { padding:13px 20px; border-bottom:1px solid var(--border); background:var(--panel);
+           display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:17px; margin:0; font-weight:600; }
+  .badge { font-size:12px; padding:3px 9px; border-radius:20px; border:1px solid var(--border);
+           color:var(--muted); background:var(--panel2); white-space:nowrap; }
+  .badge.ok { color:var(--ok); border-color:#24503a; }
+  .badge.warn { color:var(--warn); border-color:#5a4520; }
+  .badge.err { color:var(--err); border-color:#5c2b2b; }
+  main { flex:1; display:grid; grid-template-columns:minmax(0,1fr) 340px; overflow:hidden; }
+  @media (max-width:1050px){ main{ grid-template-columns:1fr; } .side{ display:none; } }
+
+  .flow { display:flex; flex-direction:column; overflow:hidden; }
+  .steps { flex:1; overflow-y:auto; padding:20px; }
+  .composer { border-top:1px solid var(--border); padding:13px 20px; background:var(--panel); }
+  .row { display:flex; gap:10px; }
+  textarea { flex:1; resize:none; min-height:50px; max-height:140px; background:var(--panel2);
+             color:var(--text); border:1px solid var(--border); border-radius:var(--radius);
+             padding:11px 13px; font:inherit; }
+  textarea:focus { outline:none; border-color:var(--accent); }
+  button { background:var(--accent); color:#fff; border:none; border-radius:var(--radius);
+           padding:0 20px; font-size:14px; font-weight:600; cursor:pointer; min-width:84px; }
+  button:hover { filter:brightness(1.1); }
+  button:disabled { background:#333a4a; color:var(--muted); cursor:not-allowed; }
+  button.ghost { background:var(--panel2); border:1px solid var(--border); color:var(--text); }
+  .examples { display:flex; gap:8px; flex-wrap:wrap; margin-top:9px; }
+  .examples span { font-size:12.5px; color:var(--muted); border:1px solid var(--border);
+                   padding:3px 10px; border-radius:20px; cursor:pointer; }
+  .examples span:hover { color:var(--text); border-color:var(--accent); }
+
+  .step { border:1px solid var(--border); border-radius:var(--radius); margin-bottom:11px;
+          background:var(--panel); overflow:hidden; }
+  .step .head { display:flex; align-items:center; gap:9px; padding:9px 13px;
+                border-bottom:1px solid var(--border); font-size:13px; }
+  .step .head .idx { color:var(--muted); font-family:var(--mono); }
+  .step .head .kind { font-weight:600; font-size:12px; padding:1px 8px; border-radius:20px; }
+  .kind.tool_call { color:#7fc4ff; background:#1b3247; }
+  .kind.tool_result { color:var(--ok); background:#153326; }
+  .kind.final { color:#e6a6ff; background:#3a2246; }
+  .kind.guard { color:var(--guard); background:#2c2444; }
+  .kind.error { color:var(--err); background:#3d1f1f; }
+  .kind.thought { color:var(--muted); background:#232733; }
+  .step .head .tool { color:var(--accent); font-family:var(--mono); font-size:12.5px; }
+  .step .head .time { margin-left:auto; color:var(--muted); font-size:12px; font-family:var(--mono); }
+  .step .body { padding:11px 13px; white-space:pre-wrap; word-break:break-word; font-size:13.5px;
+                max-height:340px; overflow-y:auto; }
+  .step.tool_result .body pre { margin:0; font-family:var(--mono); font-size:12.5px; color:#c9d3e3; }
+  .step .args { font-family:var(--mono); font-size:12.5px; color:var(--muted); }
+  .fail { color:var(--err); font-size:12.5px; margin-top:6px; }
+  .empty { color:var(--muted); text-align:center; padding:38px 12px; font-size:14px; }
+
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+  .stat { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
+  .stat b { display:block; font-size:17px; } .stat span { color:var(--muted); font-size:12px; }
+  .side { border-left:1px solid var(--border); background:var(--panel); overflow-y:auto; padding:17px; }
+  .side h2 { font-size:12.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px;
+             margin:0 0 10px; }
+  .tool-item { background:var(--panel2); border:1px solid var(--border); border-radius:8px;
+               padding:9px 11px; margin-bottom:8px; font-size:12.5px; }
+  .tool-item .n { color:var(--accent); font-family:var(--mono); font-weight:600; }
+  .tool-item .d { color:var(--muted); margin-top:3px; }
+  .status-ok { color:var(--ok); } .status-degraded { color:var(--warn); }
+  .status-empty,.status-unavailable { color:var(--err); }
+  .hist { font-size:12.5px; border-bottom:1px solid var(--border); padding:8px 0; cursor:pointer; }
+  .hist:hover { color:var(--accent); }
+  .hist .t { color:var(--muted); font-size:11.5px; }
+  .spin { display:inline-block; width:12px; height:12px; border:2px solid #fff3;
+          border-top-color:#fff; border-radius:50%; animation:r .8s linear infinite; }
+  @keyframes r { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>AgentLab</h1>
+  <span id="brainBadge" class="badge">后端检测中…</span>
+  <span id="traceBadge" class="badge">轨迹…</span>
+  <span style="flex:1"></span>
+  <span class="badge" id="stepBadge">步数 –</span>
+  <span class="badge" id="timeBadge">耗时 –</span>
+</header>
+
+<main>
+  <section class="flow">
+    <div class="steps" id="steps">
+      <div class="empty">输入一个任务，观察 Agent 如何一步步调用工具。<br />
+      右侧可以看到每个工具的自检状态，下方示例覆盖了课程检索、联网、计算、沙箱代码执行。</div>
+    </div>
+    <div class="composer">
+      <div class="row">
+        <textarea id="task" placeholder="例如：信息增益和基尼指数有什么区别？（Ctrl + Enter 运行）"></textarea>
+        <button id="go">运行</button>
+      </div>
+      <div class="examples" id="examples"></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <h2>本次运行</h2>
+    <div class="stats">
+      <div class="stat"><b id="stSteps">–</b><span>步数</span></div>
+      <div class="stat"><b id="stTools">–</b><span>工具调用</span></div>
+      <div class="stat"><b id="stFail">–</b><span>失败工具</span></div>
+      <div class="stat"><b id="stGuard">–</b><span>防护触发</span></div>
+    </div>
+    <h2>工具自检</h2>
+    <div id="toolStatus"><div class="tool-item"><div class="d">加载中…</div></div></div>
+    <h2>历史运行</h2>
+    <div id="history"><div class="tool-item"><div class="d">暂无记录</div></div></div>
+  </aside>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const EXAMPLES = [
+  '信息增益和基尼指数有什么区别？',
+  '本课程期末成绩怎么构成？平时作业和实验报告各占多少？',
+  '用 Python 生成前 20 个斐波那契数并求和',
+  '先算 15 乘以 24，再告诉我 360 的平方根',
+  '今天是几月几号，星期几？',
+  '帮我查一下 DeepSeek 最新发布的模型版本号',
+];
+EXAMPLES.forEach(t => {
+  const s = document.createElement('span');
+  s.textContent = t.length > 26 ? t.slice(0, 26) + '…' : t;
+  s.title = t;
+  s.onclick = () => { $('task').value = t; $('task').focus(); };
+  $('examples').appendChild(s);
+});
+
+const KIND_LABEL = {
+  thought:'思考', tool_call:'调用工具', tool_result:'工具返回',
+  final:'最终答案', guard:'防护介入', error:'错误'
+};
+
+function addStep(step) {
+  const div = document.createElement('div');
+  div.className = 'step ' + step.kind;
+  const head = document.createElement('div');
+  head.className = 'head';
+  const idx = document.createElement('span'); idx.className = 'idx';
+  idx.textContent = '#' + step.index;
+  const kind = document.createElement('span'); kind.className = 'kind ' + step.kind;
+  kind.textContent = KIND_LABEL[step.kind] || step.kind;
+  head.append(idx, kind);
+  const calls = step.tool_calls || (step.tool_call ? [step.tool_call] : []);
+  if (calls.length) {
+    const t = document.createElement('span'); t.className = 'tool';
+    const parts = calls.slice(0, 3).map(c => {
+      const args = Object.entries(c.arguments || {})
+        .map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(' ');
+      return `${c.name}(${args.length > 46 ? args.slice(0,46)+'…' : args})`;
+    });
+    t.textContent = parts.join('  +  ') +
+      (calls.length > 3 ? ` …（共 ${calls.length} 个并行调用）` : '');
+    head.appendChild(t);
+  }
+  const time = document.createElement('span'); time.className = 'time';
+  time.textContent = (step.elapsed_ms || 0).toFixed(0) + ' ms';
+  head.appendChild(time);
+
+  const body = document.createElement('div'); body.className = 'body';
+  const text = step.content || '';
+  const results = step.tool_results || (step.tool_result ? [step.tool_result] : []);
+  if (step.kind === 'tool_result') {
+    const pre = document.createElement('pre'); pre.textContent = text; body.appendChild(pre);
+    results.filter(r => !r.ok).forEach(r => {
+      const f = document.createElement('div'); f.className = 'fail';
+      f.textContent = '⚠ 失败：' + (r.error || '');
+      body.appendChild(f);
+    });
+  } else {
+    body.textContent = text;
+  }
+  if (step.guard_note) {
+    const g = document.createElement('div'); g.className = 'fail';
+    g.style.color = 'var(--guard)';
+    g.textContent = '防护：' + step.guard_note;
+    body.appendChild(g);
+  }
+  div.append(head, body);
+  $('steps').appendChild(div);
+  $('steps').scrollTop = $('steps').scrollHeight;
+}
+
+let running = false, counters = { steps:0, tools:0, fail:0, guard:0 };
+
+async function run() {
+  const task = $('task').value.trim();
+  if (!task || running) return;
+  running = true; $('go').disabled = true;
+  $('steps').innerHTML = '';
+  counters = { steps:0, tools:0, fail:0, guard:0 };
+  ['stSteps','stTools','stFail','stGuard'].forEach(id => $(id).textContent = '0');
+  $('stepBadge').textContent = '运行中…';
+  const t0 = Date.now();
+  const timer = setInterval(() => {
+    $('timeBadge').textContent = '耗时 ' + ((Date.now()-t0)/1000).toFixed(1) + 's';
+  }, 120);
+
+  try {
+    const resp = await fetch('/api/run/stream', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ task })
+    });
+    if (!resp.ok) {
+      const e = await resp.json().catch(()=>({}));
+      throw new Error(e.detail || ('HTTP ' + resp.status));
+    }
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream:true });
+      const blocks = buf.split('\n\n'); buf = blocks.pop();
+      for (const block of blocks) {
+        const em = block.match(/^event: (\w+)/m), dm = block.match(/^data: (.*)$/m);
+        if (!em || !dm) continue;
+        const data = JSON.parse(dm[1]);
+        if (em[1] === 'step') {
+          addStep(data);
+          counters.steps++;
+          if (data.kind === 'tool_call') counters.tools++;
+          if (data.kind === 'guard') counters.guard++;
+          if (data.tool_result && !data.tool_result.ok) counters.fail++;
+          $('stSteps').textContent = counters.steps;
+          $('stTools').textContent = counters.tools;
+          $('stFail').textContent = counters.fail;
+          $('stGuard').textContent = counters.guard;
+        } else if (em[1] === 'done') {
+          const m = data.metrics || {};
+          $('stSteps').textContent = m.num_steps ?? counters.steps;
+          $('stTools').textContent = m.num_tool_calls ?? counters.tools;
+          $('stFail').textContent = m.num_failed_tools ?? counters.fail;
+          $('stepBadge').textContent = '完成 · ' + (data.stop_reason || '');
+          loadHistory();
+        } else if (em[1] === 'error') {
+          addStep({ index:counters.steps, kind:'error', content:'服务端错误：' + data.message });
+        }
+      }
+    }
+  } catch (e) {
+    addStep({ index:counters.steps, kind:'error', content:'出错了：' + e.message });
+  } finally {
+    clearInterval(timer);
+    running = false; $('go').disabled = false;
+  }
+}
+
+async function loadHealth() {
+  try {
+    const r = await fetch('/api/health');
+    const h = await r.json();
+    const pf = h.preflight || {};
+    const bb = $('brainBadge');
+    bb.textContent = pf.brain || h.config.brain;
+    bb.className = 'badge ' + (pf.is_mock ? 'warn' : 'ok');
+    $('traceBadge').textContent = '历史轨迹 ' + (h.traces ?? 0) + ' 条';
+
+    const box = $('toolStatus'); box.innerHTML = '';
+    Object.entries(pf.tools || {}).forEach(([name, info]) => {
+      const d = document.createElement('div'); d.className = 'tool-item';
+      const n = document.createElement('div'); n.className = 'n'; n.textContent = name;
+      const s = document.createElement('div');
+      s.className = 'status-' + (info.status || 'ok');
+      s.textContent = info.status + ' · ' + info.detail;
+      s.style.fontSize = '12px';
+      d.append(n, s); box.appendChild(d);
+    });
+  } catch (e) {
+    $('brainBadge').textContent = '无法连接服务';
+    $('brainBadge').className = 'badge err';
+  }
+}
+
+async function loadHistory() {
+  try {
+    const r = await fetch('/api/traces?limit=12');
+    const h = await r.json();
+    const box = $('history');
+    if (!h.traces || !h.traces.length) {
+      box.innerHTML = '<div class="tool-item"><div class="d">暂无记录</div></div>';
+      return;
+    }
+    box.innerHTML = '';
+    h.traces.forEach(t => {
+      const d = document.createElement('div'); d.className = 'hist';
+      const mark = t.stop_reason === 'finished' ? '✔' : '✘';
+      d.innerHTML = `${mark} ${t.task.slice(0,30)}<div class="t">${t.saved_at} · 步数 ${t.num_steps}` +
+                    ` · 工具 ${(t.tools||[]).length} · ${(t.total_ms/1000).toFixed(1)}s</div>`;
+      d.onclick = () => replay(t.run_id);
+      box.appendChild(d);
+    });
+  } catch (e) { /* 忽略 */ }
+}
+
+async function replay(runId) {
+  try {
+    const r = await fetch('/api/traces/' + runId);
+    const trace = await r.json();
+    $('steps').innerHTML = '';
+    counters = { steps:0, tools:0, fail:0, guard:0 };
+    (trace.steps || []).forEach(s => { addStep(s);
+      if (s.kind==='tool_call') counters.tools++;
+      if (s.kind==='guard') counters.guard++;
+      if (s.tool_result && !s.tool_result.ok) counters.fail++;
+    });
+    const m = trace.metrics || {};
+    $('stSteps').textContent = m.num_steps ?? (trace.steps||[]).length;
+    $('stTools').textContent = m.num_tool_calls ?? counters.tools;
+    $('stFail').textContent = m.num_failed_tools ?? counters.fail;
+    $('stGuard').textContent = counters.guard;
+    $('stepBadge').textContent = '回放 · ' + trace.stop_reason;
+    $('timeBadge').textContent = '耗时 ' + ((m.total_ms||0)/1000).toFixed(1) + 's';
+  } catch (e) { alert('回放失败：' + e.message); }
+}
+
+$('go').onclick = run;
+$('task').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
+});
+loadHealth();
+loadHistory();
+</script>
+</body>
+</html>

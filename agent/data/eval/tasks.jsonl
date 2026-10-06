@@ -1,0 +1,17 @@
+// Agent 任务评估集（每行一条）
+// 判据说明：
+//   expected_tools       期望用到的工具（任一命中即可），缺失即判定未完成
+//   answer_must_include  最终答案应出现的关键词（任一），一个都没命中判定未完成
+//   forbid_tools         不该动用的工具（例如课程内问题不该去联网），一旦使用判定失败
+{"id": "t001", "task": "信息增益和基尼指数有什么区别？", "expected_tools": ["search_course_kb"], "answer_must_include": ["增益", "基尼"], "difficulty": "easy", "tags": ["课程问答", "单工具"]}
+{"id": "t002", "task": "SVM 的惩罚系数 C 变大或变小分别会怎样？", "expected_tools": ["search_course_kb"], "answer_must_include": ["C", "间隔"], "difficulty": "easy", "tags": ["课程问答", "单工具"]}
+{"id": "t003", "task": "K-means 里 K 应该怎么选？", "expected_tools": ["search_course_kb"], "answer_must_include": ["肘", "轮廓"], "difficulty": "medium", "tags": ["课程问答", "单工具"]}
+{"id": "t004", "task": "预剪枝和后剪枝各自的优缺点是什么？", "expected_tools": ["search_course_kb"], "answer_must_include": ["剪枝"], "difficulty": "easy", "tags": ["课程问答", "单工具"]}
+{"id": "t005", "task": "为什么不能在测试集上反复调参？", "expected_tools": ["search_course_kb"], "answer_must_include": ["验证集", "过拟合", "测试集"], "difficulty": "medium", "tags": ["课程问答", "概念辨析"]}
+{"id": "t006", "task": "本课程的期末成绩是怎么构成的？平时作业和实验报告各占多少？", "expected_tools": ["search_course_kb"], "answer_must_include": ["20", "30", "50"], "forbid_tools": ["web_search"], "difficulty": "easy", "tags": ["课程信息", "跨文档"]}
+{"id": "t007", "task": "实验报告需要包含哪些部分？提交格式有什么要求？", "expected_tools": ["search_course_kb"], "answer_must_include": ["报告"], "forbid_tools": ["web_search"], "difficulty": "easy", "tags": ["课程信息", "实验"]}
+{"id": "t008", "task": "先算一下 15 乘以 24 等于多少，再告诉我 360 的平方根是多少。", "expected_tools": ["calculator", "run_python"], "answer_must_include": ["360", "18"], "difficulty": "medium", "tags": ["计算", "多步"]}
+{"id": "t009", "task": "用 Python 生成前 20 个斐波那契数（从 F0=0、F1=1 开始）并求和，把和告诉我。", "expected_tools": ["run_python"], "answer_must_include": ["10945"], "difficulty": "medium", "tags": ["计算", "沙箱"]}
+{"id": "t010", "task": "今天是几月几号，星期几？", "expected_tools": ["current_time"], "answer_must_include": ["星期"], "difficulty": "easy", "tags": ["工具自检"]}
+{"id": "t011", "task": "帮我查一下 DeepSeek 最新发布的模型版本号是多少。", "expected_tools": ["web_search"], "answer_must_include": ["DeepSeek", "模型"], "difficulty": "medium", "tags": ["联网", "时效"]}
+{"id": "t012", "task": "检索课程里关于交叉熵损失的内容，并说明它为什么适合分类任务。", "expected_tools": ["search_course_kb"], "answer_must_include": ["交叉熵"], "difficulty": "medium", "tags": ["课程问答", "解释"]}

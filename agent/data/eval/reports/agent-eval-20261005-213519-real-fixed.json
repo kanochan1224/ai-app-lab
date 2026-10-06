@@ -1,0 +1,256 @@
+{
+  "samples": 12,
+  "brain": "deepseek-chat",
+  "is_mock": false,
+  "metrics": {
+    "success_rate": 1.0,
+    "avg_coverage": 1.0,
+    "tool_accuracy": 1.0,
+    "avg_steps": 3.17,
+    "avg_tool_calls": 1.58,
+    "avg_elapsed_ms": 6018.4,
+    "avg_tokens": 5253.8,
+    "guard_rate": 0.0,
+    "recovery_rate": 0.0
+  },
+  "stop_reason_dist": {
+    "finished": 12
+  },
+  "outcomes": [
+    {
+      "id": "t001",
+      "task": "信息增益和基尼指数有什么区别？",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 2,
+      "failed_tools": 0,
+      "tools": [
+        "search_course_kb",
+        "search_course_kb"
+      ],
+      "elapsed_ms": 17472.3,
+      "tokens": 5999,
+      "final_answer": "# 信息增益 vs 基尼指数\n\n两者都是决策树用来衡量「节点纯度 / 划分好坏」的指标，但**出身、方向、计算方式**都不同。\n\n## 1. 定义与公式\n\n**信息增益**（基于信息熵，来自信息论）：\n\n$$\\mathrm{Gain}(D,a)=\\mathrm{Ent}(D)-\\mathrm{Ent}(D\\mid a)$$\n\n即划分前后熵的减少量，衡量「纯度提升」多少。熵本身含对数运算 $\\mathrm{Ent}(D)=-\\sum_k p_k\\log_2 p_k$。\n（《03-第3章-决策树.md》 > 3.2.3 信息增益）\n\n**基尼指数**（不依赖信息论，是概率平方和）：\n\n$$\\mathrm{Gini}(D)=1-\\sum_{k=1}^{|\\mathcal{Y}|}p_k^2,\\qquad \\mathrm{Gini\\_index}(D,a)=\\sum_v\\frac{|D^v|}{|"
+    },
+    {
+      "id": "t002",
+      "task": "SVM 的惩罚系数 C 变大或变小分别会怎样？",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 1,
+      "failed_tools": 0,
+      "tools": [
+        "search_course_kb"
+      ],
+      "elapsed_ms": 5520.6,
+      "tokens": 4958,
+      "final_answer": "**结论：C 越大越\"严格\"，越容易过拟合；C 越小越\"宽容\"，越容易欠拟合。**\n\n软间隔 SVM 的目标函数是\n\n$$\\min_{\\boldsymbol{w},b,\\xi}\\ \\frac{1}{2}\\|\\boldsymbol{w}\\|^2 + C\\sum_{i=1}^{m}\\xi_i$$\n\nC 就是\"间隔宽度\"与\"违反约束的容错\"之间的权衡系数（《05-第5章-支持向量机.md》 > 5.3 软间隔与正则化）。\n\n| C 取值 | 对违反约束的容忍度 | 间隔 | 偏差 | 方差 | 过拟合风险 |\n| --- | --- | --- | --- | --- | --- |\n| 很大 | 几乎不容忍 | 窄 | 低 | 高 | 高 |\n| 很小 | 容忍度高 | 宽 | 高 | 低 | 低（可能欠拟合） |\n\n（同上，5.3 节表格）\n\n**直观理解**\n\n- **C 变大**：惩罚项"
+    },
+    {
+      "id": "t003",
+      "task": "K-means 里 K 应该怎么选？",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 1,
+      "failed_tools": 0,
+      "tools": [
+        "search_course_kb"
+      ],
+      "elapsed_ms": 5689.7,
+      "tokens": 5132,
+      "final_answer": "# K-means 中 K 的选择\n\nK 是超参数，K-means 本身不会自动给出，需要靠「内部指标 + 业务判断」来定。课程里给了两条主要路径：\n\n## 1. 肘部法（Elbow Method）\n画出簇内平方误差 $E$ 随 $K$ 的变化曲线。$K$ 增大时 $E$ 单调下降（极端情况 $K=m$ 时 $E=0$），所以不能取最小值，而是找**下降速度突然变缓的拐点（肘部）**，该点常被认为接近真实簇数。\n- 缺点：拐点有时不明显，需要人工判断。\n（《08-第8章-无监督学习.md》 > 8.3.1 肘部法）\n\n## 2. 轮廓系数法（Silhouette）\n对每个 $K$ 计算全体样本的平均轮廓系数，**取最大值对应的 K**。\n单个样本的轮廓系数为\n\n$$s(i)=\\frac{b(i)-a(i)}{\\max\\{a(i),b(i)\\}}$$\n\n其中 $a(i)$ 是到同簇其他样本的"
+    },
+    {
+      "id": "t004",
+      "task": "预剪枝和后剪枝各自的优缺点是什么？",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 1,
+      "failed_tools": 0,
+      "tools": [
+        "search_course_kb"
+      ],
+      "elapsed_ms": 4675.4,
+      "tokens": 4580,
+      "final_answer": "**预剪枝（pre-pruning）**\n\n- 做法：在划分前判断，若当前划分不能带来泛化性能提升，就停止划分并把该节点标记为叶节点。\n- 优点：训练与测试时间都大幅减少（树更小、更浅）。\n- 缺点：基于贪心策略，某些划分当前看似无用、后续却可能带来提升，因此有**欠拟合**风险。\n\n**后剪枝（post-pruning）**\n\n- 做法：先训练出完整树，再自底向上考察内部节点，若把该子树替换为叶节点能提升泛化性能，就剪掉。\n- 优点：通常比预剪枝保留更多分支，欠拟合风险小，泛化性能更好。\n- 缺点：训练时间开销大（要先建完整树再逐个回溯）。\n\n**一句话对比**：预剪枝「快但容易欠拟合」，后剪枝「慢但泛化更好」。实践中常用的是代价复杂度剪枝（CART 的 CCP），通过参数 α 控制树的大小，并用交叉验证选择 α。\n\n出处：《03-第3章-决策树.md》 > 3.3 剪枝：对抗过拟合 >"
+    },
+    {
+      "id": "t005",
+      "task": "为什么不能在测试集上反复调参？",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 2,
+      "failed_tools": 0,
+      "tools": [
+        "search_course_kb",
+        "search_course_kb"
+      ],
+      "elapsed_ms": 6865.6,
+      "tokens": 6324,
+      "final_answer": "## 核心原因：调参就是「用数据做选择」，测试集一旦参与选择就不再是测试集\n\n**1. 测试集会退化成验证集**\n反复用测试集比较不同超参数、挑出分数最高的那个，这个「挑选」动作本身就是在用测试集的信息做决策。测试集于是事实上变成了验证集，模型选择过程会向测试集过拟合，报出的泛化误差偏乐观，上线后达不到。\n（《11-课程FAQ与常见问题.md》 > 三、概念辨析；《04-第4章-模型评估与选择.md》 > 4.4 调参与最终模型）\n\n**2. 报出的分数不再是无偏估计**\n测试集的作用是给出一个「模型没见过」的泛化误差估计。一旦你根据它的反馈反复调整，这个估计就被污染了——你实际上是在对测试集做拟合，只是拟合的是超参数而不是权重。课程把它列为常见误区之一：「在测试集上调参：反复用测试集评估并选模型，测试集就变成了验证集，泛化估计会偏乐观。」\n（《00-课程大纲与学习指南.md》 > 常见误"
+    },
+    {
+      "id": "t006",
+      "task": "本课程的期末成绩是怎么构成的？平时作业和实验报告各占多少？",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 1,
+      "failed_tools": 0,
+      "tools": [
+        "search_course_kb"
+      ],
+      "elapsed_ms": 4611.7,
+      "tokens": 5010,
+      "final_answer": "**期末总成绩构成：平时作业 20% + 实验报告 30% + 期末闭卷考试 50%**\n（《00-课程大纲与学习指南.md》 > 课程基本信息）\n\n补充几点相关规则：\n\n- **期末考试**：闭卷，可带一张 A4 手写公式纸（正反面均可）。题型约为选择题 20 分、简答题 30 分、计算与推导题 30 分、综合设计题 20 分。（《11-课程FAQ与常见问题.md》 > 四、作业与考试）\n- **实验报告内部评分点**：结果正确性 40%、分析与思考题 30%、图表与报告规范 15%、代码质量 15%。（《11-课程FAQ与常见问题.md》 > 四、作业与考试；《09-实验2-线性回归与逻辑回归.md》 > 六、报告要求与提交规范）\n- **迟交**：每迟交 1 天扣本次作业或实验成绩的 10%，超过 7 天不再受理。（《11-课程FAQ与常见问题.md》 > 四、作业与考试）\n\n也就是"
+    },
+    {
+      "id": "t007",
+      "task": "实验报告需要包含哪些部分？提交格式有什么要求？",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 1,
+      "failed_tools": 0,
+      "tools": [
+        "search_course_kb"
+      ],
+      "elapsed_ms": 5768.1,
+      "tokens": 5451,
+      "final_answer": "## 实验报告包含的部分\n\n**通用结构**（实验 2、4 明确给出）：实验目的 → 环境与数据 → 方法与步骤 → 结果（含表格与图）→ 思考题回答 → 心得与问题（《09-实验2-线性回归与逻辑回归.md》 > 六、报告要求与提交规范；《10-实验4-模型评估与调参.md》 > 六、报告要求与提交规范）\n\n**实验 3 的具体清单**（缺任一部分扣分）（《09-实验3-决策树与集成模型实战.md》 > 六、实验报告要求）：\n1. 实验环境：操作系统、Python 与各库版本（`pip list` 关键包版本）\n2. 数据处理说明：样本量、特征数、类别分布、缺失值处理\n3. 结果表格：步骤 3、5、6 的完整结果表（不能只贴代码不贴输出）\n4. 图表：深度-准确率曲线、混淆矩阵、特征重要性各一张\n5. 思考题解答：8 题全答，每题不少于 80 字，要有自己的观察\n6. 结论与反思：本实验"
+    },
+    {
+      "id": "t008",
+      "task": "先算一下 15 乘以 24 等于多少，再告诉我 360 的平方根是多少。",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 2,
+      "failed_tools": 0,
+      "tools": [
+        "calculator",
+        "calculator"
+      ],
+      "elapsed_ms": 2359.2,
+      "tokens": 3509,
+      "final_answer": "- 15 × 24 = **360**\n- √360 ≈ **18.9737**（精确值 6√10）"
+    },
+    {
+      "id": "t009",
+      "task": "用 Python 生成前 20 个斐波那契数并求和，把和告诉我。",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 1,
+      "failed_tools": 0,
+      "tools": [
+        "run_python"
+      ],
+      "elapsed_ms": 2263.9,
+      "tokens": 3654,
+      "final_answer": "前 20 个斐波那契数（从 F₀=0 开始）：\n\n0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181\n\n**和为 10945。**\n\n（若按 F₁=F₂=1 起算、取前 20 项即 1,1,2,…,6765，则和为 17710。）"
+    },
+    {
+      "id": "t010",
+      "task": "今天是几月几号，星期几？",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 1,
+      "failed_tools": 0,
+      "tools": [
+        "current_time"
+      ],
+      "elapsed_ms": 2334.3,
+      "tokens": 3398,
+      "final_answer": "今天是 2026 年 10 月 5 日，星期一（北京时间 21:35）。"
+    },
+    {
+      "id": "t011",
+      "task": "帮我查一下 DeepSeek 最新发布的模型版本号是多少。",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 5,
+      "tool_calls": 4,
+      "failed_tools": 0,
+      "tools": [
+        "web_search",
+        "current_time",
+        "fetch_url",
+        "web_search"
+      ],
+      "elapsed_ms": 7033.8,
+      "tokens": 8024,
+      "final_answer": "**DeepSeek 最新发布的模型版本号是 DeepSeek-V4.1-Flash。**\n\n依据：\n- DeepSeek 官网首页（https://www.deepseek.com/）当前横幅公告：「**DeepSeek-V4.1-Flash 发布**，文本与 Agent 性能全面提升、兼具原生多模态视觉理解能力，能力更强、速度更快、且成本更低」。\n- NVIDIA NIM 模型库（build.nvidia.com/deepseek-ai，2026-09-18 更新）也列出 `deepseek-v4.1-flash`：552B MoE、8B 激活参数、原生多模态支持。\n\n补充说明（避免混淆）：\n- 稍早的版本是 **DeepSeek-V4-Pro-0813**（Hugging Face / OpenRouter 上可见，2026 年 8 月发布），属于 V4 系列。\n- 因此按发布时间排"
+    },
+    {
+      "id": "t012",
+      "task": "检索课程里关于交叉熵损失的内容，并说明它为什么适合分类任务。",
+      "completed": true,
+      "tool_hit": true,
+      "forbidden_used": [],
+      "coverage": 1.0,
+      "note": "",
+      "stop_reason": "finished",
+      "steps": 3,
+      "tool_calls": 2,
+      "failed_tools": 0,
+      "tools": [
+        "search_course_kb",
+        "search_course_kb"
+      ],
+      "elapsed_ms": 7626.6,
+      "tokens": 7007,
+      "final_answer": "## 交叉熵损失（Cross-Entropy Loss）\n\n### 一、课程中的定义\n\n**二分类情形**：设 $p_i=\\sigma(\\boldsymbol{w}^\\top\\boldsymbol{x}_i+b)$ 为第 $i$ 个样本被判为正例的概率，单样本似然为 $p_i^{y_i}(1-p_i)^{1-y_i}$。在样本独立同分布假设下，对数似然为\n\n$$\\ell(\\boldsymbol{w},b)=\\sum_{i=1}^{m}\\bigl[y_i\\ln p_i+(1-y_i)\\ln(1-p_i)\\bigr]$$\n\n最大化 $\\ell$ 等价于最小化负对数似然 $L=-\\ell$，这就是二分类的交叉熵损失。且 $\\ell$ 是凹函数、$L$ 是凸函数，因此对数几率回归的优化是**凸优化**，不存在局部极小陷阱。\n（《02-第2章-线性模型.md》 > 2.2 对数几率回归 > 2.2."
+    }
+  ]
+}

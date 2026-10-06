@@ -1,0 +1,47 @@
+// CourseRAG 检索评估集（每行一个 JSON 对象）
+// 字段说明：
+//   id                 样本编号
+//   question           学生问题（模拟真实提问口吻）
+//   ground_truth       参考要点（用于人工核对与裁判对比）
+//   relevant_sources   该问题应当命中的原始文档（相对 data/raw 的路径）
+//   should_refuse      true 表示知识库中没有依据，系统应当拒答
+//   difficulty         easy / medium / hard
+//   tags               主题标签，便于分主题统计
+{"id": "q001", "question": "信息增益和基尼指数有什么区别？", "ground_truth": "信息增益用于 ID3，衡量划分前后熵的减少量；基尼指数用于 CART，衡量从集合中随机抽两个样本类别不一致的概率，不需要对数运算所以更快。", "relevant_sources": ["03-第3章-决策树.md"], "difficulty": "easy", "tags": ["决策树", "划分准则"]}
+{"id": "q002", "question": "为什么信息增益会偏向取值较多的属性？", "ground_truth": "因为取值多的属性会把样本切得很碎，各子集容易变纯，条件熵接近 0，信息增益接近熵本身；C4.5 用信息增益率即除以固有值来抑制这种偏好。", "relevant_sources": ["03-第3章-决策树.md"], "difficulty": "medium", "tags": ["决策树", "划分准则"]}
+{"id": "q003", "question": "8 个样本里 7 个正例 1 个反例，信息熵是多少？", "ground_truth": "Ent = -0.875*log2(0.875) - 0.125*log2(0.125) ≈ 0.544 比特。", "relevant_sources": ["03-第3章-决策树.md"], "difficulty": "medium", "tags": ["决策树", "信息论"]}
+{"id": "q004", "question": "ID3、C4.5 和 CART 这三代决策树算法的主要差别是什么？", "ground_truth": "ID3 用信息增益且不能处理连续值与缺失值；C4.5 用信息增益率，支持连续值二分与缺失值，可生成多叉树；CART 用基尼指数，只生成二叉树，可用于分类与回归，并支持代价复杂度剪枝。", "relevant_sources": ["03-第3章-决策树.md"], "difficulty": "easy", "tags": ["决策树"]}
+{"id": "q005", "question": "预剪枝和后剪枝各自的优缺点是什么？", "ground_truth": "预剪枝训练和测试开销小，但基于贪心，可能欠拟合；后剪枝先建完整树再自底向上回缩，泛化性能通常更好，但训练开销大。", "relevant_sources": ["03-第3章-决策树.md"], "difficulty": "easy", "tags": ["决策树", "剪枝"]}
+{"id": "q006", "question": "决策树为什么不需要做特征标准化，而 SVM 必须做？", "ground_truth": "决策树每次只在单个特征上按取值划分，划分结果与特征量纲无关；SVM 基于距离与内积计算间隔，量纲大的特征会主导距离度量，所以必须标准化。", "relevant_sources": ["03-第3章-决策树.md", "05-第5章-支持向量机.md"], "difficulty": "medium", "tags": ["决策树", "支持向量机", "特征工程"]}
+{"id": "q007", "question": "支持向量机的最大间隔思想是什么？", "ground_truth": "在能把两类分开的超平面中，选择使最近样本点到超平面距离最大的那一个，间隔为 2/||w||，最大化间隔等价于最小化 ||w||^2，且解由少数支持向量决定。", "relevant_sources": ["05-第5章-支持向量机.md"], "difficulty": "easy", "tags": ["支持向量机"]}
+{"id": "q008", "question": "SVM 为什么要把原问题转成对偶问题？", "ground_truth": "因为对偶问题的变量个数是样本数而不是特征维度，且目标函数与约束只依赖样本内积，这为核技巧铺路，使得无需显式计算高维映射也能求解。", "relevant_sources": ["05-第5章-支持向量机.md"], "difficulty": "hard", "tags": ["支持向量机", "对偶"]}
+{"id": "q009", "question": "SVM 的惩罚系数 C 变大或变小分别会怎样？", "ground_truth": "C 大表示不容忍违反约束的样本，间隔变窄，偏差低方差高，容易过拟合；C 小则容忍度高，间隔宽，偏差高方差低，可能欠拟合。", "relevant_sources": ["05-第5章-支持向量机.md"], "difficulty": "medium", "tags": ["支持向量机", "超参数"]}
+{"id": "q010", "question": "核技巧到底解决了什么问题？", "ground_truth": "避免了显式地把样本映射到高维空间并计算高维内积，只要定义核函数 k(xi,xj) 等于高维内积，就能在原空间量级的计算量下完成高维训练。", "relevant_sources": ["05-第5章-支持向量机.md"], "difficulty": "medium", "tags": ["支持向量机", "核方法"]}
+{"id": "q011", "question": "单层感知机为什么连 XOR 都学不会？", "ground_truth": "因为单层感知机的决策边界是超平面，XOR 的正负样本在平面上对角分布，不存在一条直线能把它们分开；加入隐层做非线性变换后才线性可分。", "relevant_sources": ["06-第6章-神经网络.md"], "difficulty": "easy", "tags": ["神经网络"]}
+{"id": "q012", "question": "梯度消失是怎么产生的，ReLU 为什么能缓解？", "ground_truth": "Sigmoid 导数最大只有 0.25，反向传播逐层相乘导致梯度指数衰减；ReLU 在正区间导数恒为 1，梯度可以近乎无损地回传，因此缓解了梯度消失。", "relevant_sources": ["06-第6章-神经网络.md"], "difficulty": "medium", "tags": ["神经网络", "激活函数"]}
+{"id": "q013", "question": "反向传播算法的基本思想是什么？", "ground_truth": "基于梯度下降，先前向计算输出与误差，再用链式法则从输出层往前逐层计算每个参数的偏导，沿负梯度方向更新；反向过程复用已算结果，复杂度与前向同阶。", "relevant_sources": ["06-第6章-神经网络.md"], "difficulty": "easy", "tags": ["神经网络"]}
+{"id": "q014", "question": "用 PyTorch 的 CrossEntropyLoss 时，模型最后一层还要不要加 Softmax？", "ground_truth": "不要。nn.CrossEntropyLoss 内部已经包含 LogSoftmax，再手动加 Softmax 会导致重复计算，结果错误。", "relevant_sources": ["06-第6章-神经网络.md"], "difficulty": "medium", "tags": ["神经网络", "工程实践"]}
+{"id": "q015", "question": "Bagging 和 Boosting 的核心区别是什么？", "ground_truth": "Bagging 并行训练、通过样本扰动制造差异、投票或平均，主要降低方差；Boosting 串行训练、每轮聚焦前面做错的样本，主要降低偏差。", "relevant_sources": ["07-第7章-集成学习.md"], "difficulty": "easy", "tags": ["集成学习"]}
+{"id": "q016", "question": "随机森林的随机性体现在哪两个地方？", "ground_truth": "一是样本随机，用 Bootstrap 有放回抽样生成不同训练集；二是特征随机，每个节点分裂时先在随机选出的特征子集中挑最优属性。", "relevant_sources": ["07-第7章-集成学习.md"], "difficulty": "easy", "tags": ["集成学习", "随机森林"]}
+{"id": "q017", "question": "AdaBoost 每一轮的样本权重是怎么更新的？", "ground_truth": "分错的样本权重乘以 exp(alpha_t) 被放大，分对的乘以 exp(-alpha_t) 被缩小，再除以归一化因子；其中 alpha_t = 0.5*ln((1-eps_t)/eps_t)，错误率越低话语权越大。", "relevant_sources": ["07-第7章-集成学习.md"], "difficulty": "hard", "tags": ["集成学习", "AdaBoost"]}
+{"id": "q018", "question": "XGBoost 相比 GBDT 有哪些改进？", "ground_truth": "用二阶泰勒展开同时利用一阶与二阶导数；目标函数显式加入正则项惩罚叶子数量与叶子权重；支持特征并行；能自动处理缺失值；内置交叉验证与早停。", "relevant_sources": ["07-第7章-集成学习.md"], "difficulty": "medium", "tags": ["集成学习", "XGBoost"]}
+{"id": "q019", "question": "LightGBM 的叶子优先生长有什么风险？", "ground_truth": "leaf-wise 生长在同叶子数下损失更低，但会优先分裂增益大的叶子，容易长出不平衡的深树，更容易过拟合，需要限制 num_leaves 与 max_depth。", "relevant_sources": ["07-第7章-集成学习.md"], "difficulty": "medium", "tags": ["集成学习", "LightGBM"]}
+{"id": "q020", "question": "K-means 的目标函数是什么，为什么只能保证局部最优？", "ground_truth": "目标函数是各簇样本到其质心的平方误差之和；因为该目标函数非凸，Lloyd 迭代每一步都不增大目标值所以必然收敛，但收敛点依赖初始质心，通常是局部最优。", "relevant_sources": ["08-第8章-无监督学习.md"], "difficulty": "medium", "tags": ["聚类"]}
+{"id": "q021", "question": "K-means 里 K 该怎么选？", "ground_truth": "常用肘部法看平方误差下降的拐点、轮廓系数法取平均轮廓系数最大的 K、以及 Gap Statistic；三者结合看并回到业务语义判断。", "relevant_sources": ["08-第8章-无监督学习.md"], "difficulty": "easy", "tags": ["聚类"]}
+{"id": "q022", "question": "什么情况下应该用 DBSCAN 而不是 K-means？", "ground_truth": "当簇是非凸的任意形状、数据含噪声、或事先不知道簇数时应用 DBSCAN；K-means 隐含各簇球形且大小相近的假设，对非凸簇和异常值表现不好。", "relevant_sources": ["08-第8章-无监督学习.md"], "difficulty": "medium", "tags": ["聚类", "DBSCAN"]}
+{"id": "q023", "question": "PCA 为什么可以用协方差矩阵的特征向量来解释？", "ground_truth": "PCA 要在单位方向 w 上让投影方差 w^T X^T X w 最大，用拉格朗日乘子法得到 X^T X w = lambda w，即 w 是协方差矩阵的特征向量、lambda 是特征值，按特征值从大到小取前若干个方向即主成分。", "relevant_sources": ["08-第8章-无监督学习.md"], "difficulty": "hard", "tags": ["降维", "PCA"]}
+{"id": "q024", "question": "为什么做聚类和降维之前必须先标准化？", "ground_truth": "因为两者都依赖距离或方差：量纲大的特征会主导欧氏距离和协方差，导致结果被单一特征支配；标准化后各特征尺度一致，结果才反映真实的相似结构。", "relevant_sources": ["08-第8章-无监督学习.md"], "difficulty": "medium", "tags": ["降维", "聚类", "特征工程"]}
+{"id": "q025", "question": "为什么不能在测试集上反复调参？", "ground_truth": "反复用测试集评估并据此选模型，相当于把测试集信息泄漏进了模型选择过程，测试集就变成了验证集，最终报告的泛化性能会偏乐观；正确做法是用验证集或交叉验证调参，测试集只在最后用一次。", "relevant_sources": ["04-第4章-模型评估与选择.md"], "difficulty": "easy", "tags": ["模型评估"]}
+{"id": "q026", "question": "为什么用分层 K 折交叉验证而不是普通 K 折？", "ground_truth": "分层保证每个折中各类别比例与整体一致，避免某一折里某个类别样本极少甚至缺失，从而让指标估计更稳定，尤其在类别不平衡时很关键。", "relevant_sources": ["04-第4章-模型评估与选择.md"], "difficulty": "medium", "tags": ["模型评估", "交叉验证"]}
+{"id": "q027", "question": "类别不平衡时应该看 ROC 曲线还是 P-R 曲线？", "ground_truth": "应优先看 P-R 曲线。因为 ROC 的横轴假正例率以负类总数为分母，负类占绝大多数时该分母很大，假正例率增长被稀释，曲线看起来依然很好，掩盖了查准率低的问题。", "relevant_sources": ["04-第4章-模型评估与选择.md"], "difficulty": "hard", "tags": ["模型评估", "不平衡"]}
+{"id": "q028", "question": "偏差-方差分解说明了什么？", "ground_truth": "泛化误差可分解为偏差、方差与噪声之和；模型越复杂偏差越低但方差越高，越简单则相反，因此存在使总误差最小、泛化最好的模型复杂度，这也是欠拟合与过拟合的分界。", "relevant_sources": ["04-第4章-模型评估与选择.md"], "difficulty": "medium", "tags": ["模型评估"]}
+{"id": "q029", "question": "怎么判断模型是过拟合还是欠拟合，分别怎么处理？", "ground_truth": "过拟合表现为训练误差远低于验证误差，应增加数据、正则化、降低模型复杂度、早停；欠拟合表现为训练误差本身就很高，应提高模型复杂度、增加特征、减小正则化强度。用学习曲线可以直观区分。", "relevant_sources": ["04-第4章-模型评估与选择.md"], "difficulty": "easy", "tags": ["模型评估"]}
+{"id": "q030", "question": "线性回归的最小二乘闭式解在什么情况下会失效？", "ground_truth": "当特征矩阵的列近似线性相关或特征数多于样本数时，X^T X 不可逆或接近奇异，闭式解不稳定甚至不存在；可用岭回归加入 L2 正则、伪逆或先做特征选择与降维。", "relevant_sources": ["02-第2章-线性模型.md"], "difficulty": "medium", "tags": ["线性模型"]}
+{"id": "q031", "question": "逻辑回归为什么用交叉熵而不是均方误差？", "ground_truth": "交叉熵与 Sigmoid 搭配时梯度形如预测值减真实值，误差越大梯度越大，收敛快；若用均方误差，梯度中会多出 Sigmoid 的导数因子，在输出饱和时梯度趋近于零，出现梯度消失、收敛缓慢。", "relevant_sources": ["02-第2章-线性模型.md"], "difficulty": "hard", "tags": ["线性模型", "损失函数"]}
+{"id": "q032", "question": "L1 和 L2 正则化有什么区别？", "ground_truth": "L1（Lasso）在零点不可导，容易把部分权重压到恰好为零，产生稀疏解，可用于特征选择；L2（岭回归）让权重整体收缩但不为零，能缓解共线性、提升稳定性。", "relevant_sources": ["02-第2章-线性模型.md"], "difficulty": "medium", "tags": ["线性模型", "正则化"]}
+{"id": "q033", "question": "课程成绩是怎么计算的，各部分占多少？", "ground_truth": "平时作业 20%，实验报告 30%，期末闭卷考试 50%。", "relevant_sources": ["00-课程大纲与学习指南.md"], "difficulty": "easy", "tags": ["课程信息"]}
+{"id": "q034", "question": "实验报告的评分点有哪些？", "ground_truth": "需要有环境说明、数据处理说明、结果表格、图表、思考题解答与结论反思；只贴代码不贴输出、缺少图表或思考题未作答都会扣分。", "relevant_sources": ["09-实验3-决策树与集成模型实战.md"], "difficulty": "easy", "tags": ["课程信息", "实验"]}
+{"id": "q035", "question": "做实验时我自己找真实数据集可以吗？", "ground_truth": "可以，但要在报告中说明数据来源、样本量与预处理过程，并保证实验步骤与课程要求一致。", "relevant_sources": ["11-课程FAQ与常见问题.md"], "difficulty": "easy", "tags": ["课程信息"]}
+{"id": "q036", "question": "这个模型在 ImageNet 上的准确率是多少？", "ground_truth": "知识库为课程讲义，不含 ImageNet 排行榜数据，应拒答。", "relevant_sources": [], "should_refuse": true, "difficulty": "easy", "tags": ["越界", "拒答"]}
+{"id": "q037", "question": "Hinton 在 2023 年发表的那篇论文结论是什么？", "ground_truth": "课程资料中没有这篇论文的记录，应拒答。", "relevant_sources": [], "should_refuse": true, "difficulty": "easy", "tags": ["越界", "拒答"]}
+{"id": "q038", "question": "下周三食堂几点开门？", "ground_truth": "与课程知识库无关，应拒答。", "relevant_sources": [], "should_refuse": true, "difficulty": "easy", "tags": ["越界", "拒答"]}

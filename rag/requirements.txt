@@ -1,0 +1,6 @@
+# 默认安装 = 核心依赖 + 本地模型能力（推荐给开发机）
+# 若只想快速验证流程：pip install -r requirements-core.txt
+-r requirements-core.txt
+-r requirements-ml.txt
+# Windows 上 zoneinfo 需要它才能解析 Asia/Shanghai 这类 IANA 时区名
+tzdata>=2024.1

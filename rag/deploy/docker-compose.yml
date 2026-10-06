@@ -1,0 +1,40 @@
+name: courserag
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: courserag:latest
+    container_name: courserag-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env
+    environment:
+      # 容器内用宿主模型缓存，避免每次重建都重新下载
+      HF_HOME: /app/.cache/huggingface
+      CHROMA_DIR: /app/data/index/chroma
+    volumes:
+      - ../data:/app/data
+      - ../.cache:/app/.cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.get('http://127.0.0.1:8000/api/health',timeout=4).status_code==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # 可选：本地向量库换 Milvus（数据量大时用）
+  # milvus:
+  #   image: milvusdb/milvus:v2.4-latest
+  #   command: ["milvus", "run", "standalone"]
+  #   environment:
+  #     ETCD_USE_EMBED: "true"
+  #     COMMON_STORAGETYPE: local
+  #   ports: ["19530:19530"]
+  #   volumes:
+  #     - milvus-data:/var/lib/milvus
+
+# volumes:
+#   milvus-data:

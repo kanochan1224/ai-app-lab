@@ -1,0 +1,16 @@
+# 构建上下文瘦身：镜像里只需要代码 + 语料
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.cache/
+.env
+data/index/
+data/processed/
+data/eval/reports/
+tests/data/
+.vscode/
+.idea/
+*.png
+*.ico

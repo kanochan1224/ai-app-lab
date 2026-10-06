@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CourseRAG · 课程知识库问答</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #171a23;
+    --panel-2: #1e222d;
+    --border: #2a2f3d;
+    --text: #e6e9f0;
+    --muted: #8b93a7;
+    --accent: #4c8dff;
+    --accent-dim: #2b4f8f;
+    --ok: #35c07f;
+    --warn: #e0a33e;
+    --err: #e0605e;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.7 -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  header {
+    padding: 14px 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: var(--panel);
+  }
+  header h1 { font-size: 17px; margin: 0; font-weight: 600; }
+  header .kb { color: var(--muted); font-size: 13px; }
+  .badge {
+    font-size: 12px; padding: 3px 9px; border-radius: 20px;
+    border: 1px solid var(--border); color: var(--muted); background: var(--panel-2);
+  }
+  .badge.ok { color: var(--ok); border-color: #24503a; }
+  .badge.warn { color: var(--warn); border-color: #5a4520; }
+  main { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 380px; overflow: hidden; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } .side { display: none; } }
+
+  .chat { display: flex; flex-direction: column; overflow: hidden; }
+  .messages { flex: 1; overflow-y: auto; padding: 22px; }
+  .msg { margin-bottom: 20px; max-width: 860px; }
+  .msg .who { font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: .4px; }
+  .msg .body {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; white-space: pre-wrap; word-break: break-word;
+  }
+  .msg.user .body { background: var(--accent-dim); border-color: #3a63a8; }
+  .msg.sys .body { color: var(--muted); font-size: 13.5px; background: transparent; border-style: dashed; }
+  .cite-chip {
+    display: inline-block; min-width: 20px; text-align: center; cursor: pointer;
+    background: var(--accent-dim); border: 1px solid #3a63a8; color: #cfe0ff;
+    border-radius: 5px; padding: 0 5px; margin: 0 2px; font-size: 12px; font-weight: 600;
+  }
+  .cite-chip:hover { background: var(--accent); color: #fff; }
+  .meta-line { font-size: 12px; color: var(--muted); margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .composer { border-top: 1px solid var(--border); padding: 14px 22px; background: var(--panel); }
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; font-size: 13px; color: var(--muted); }
+  select, input[type=number] {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 7px; padding: 5px 8px; font-size: 13px;
+  }
+  .input-row { display: flex; gap: 10px; }
+  textarea {
+    flex: 1; resize: none; min-height: 52px; max-height: 160px;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px; font: inherit;
+  }
+  textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+  button {
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius);
+    padding: 0 22px; font-size: 14px; font-weight: 600; cursor: pointer; min-width: 88px;
+  }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { background: #333a4a; color: var(--muted); cursor: not-allowed; }
+  .examples { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .examples span {
+    font-size: 12.5px; color: var(--muted); border: 1px solid var(--border);
+    padding: 3px 10px; border-radius: 20px; cursor: pointer;
+  }
+  .examples span:hover { color: var(--text); border-color: var(--accent); }
+
+  .side { border-left: 1px solid var(--border); background: var(--panel); overflow-y: auto; padding: 18px; }
+  .side h2 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin: 0 0 12px; }
+  .ctx {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 11px 13px; margin-bottom: 11px; font-size: 13px; cursor: pointer;
+  }
+  .ctx:hover { border-color: var(--accent); }
+  .ctx .head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .ctx .path { color: #a9c4ff; font-size: 12px; word-break: break-all; }
+  .ctx .text { color: var(--muted); max-height: 76px; overflow: hidden; }
+  .ctx.open .text { max-height: none; color: var(--text); }
+  .pill {
+    font-size: 11px; padding: 1px 7px; border-radius: 20px; white-space: nowrap;
+    border: 1px solid var(--border); color: var(--muted);
+  }
+  .pill.dense { color: #7fc4ff; border-color: #274a6b; }
+  .pill.sparse { color: #ffc978; border-color: #6b5227; }
+  .pill.hybrid { color: #b39dff; border-color: #46376b; }
+  .pill.rerank { color: var(--ok); border-color: #24503a; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12.5px; margin-bottom: 16px; }
+  .stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .stat b { display: block; font-size: 16px; color: var(--text); }
+  .stat span { color: var(--muted); }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid #fff3; border-top-color: #fff; border-radius: 50%; animation: r .8s linear infinite; }
+  @keyframes r { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>CourseRAG</h1>
+  <span class="kb" id="kbName">课程知识库问答</span>
+  <span style="flex:1"></span>
+  <span class="badge" id="badgeIndex">索引加载中…</span>
+  <span class="badge" id="badgeLlm">模型…</span>
+  <span class="badge" id="badgeVec">向量…</span>
+</header>
+
+<main>
+  <section class="chat">
+    <div class="messages" id="messages">
+      <div class="msg sys"><div class="body">
+        欢迎使用课程知识库问答。系统会先在课程资料中检索相关片段，再基于片段作答并给出引用来源。
+        若资料中没有依据，它会明确拒答而不是编造答案。
+      </div></div>
+    </div>
+    <div class="composer">
+      <div class="controls">
+        <label>检索模式
+          <select id="mode">
+            <option value="hybrid_rerank" selected>混合检索 + 重排（默认）</option>
+            <option value="hybrid">混合检索（BM25 + 向量 + RRF）</option>
+            <option value="dense">仅向量检索</option>
+            <option value="sparse">仅 BM25</option>
+          </select>
+        </label>
+        <label>送入生成的片段数
+          <input type="number" id="topK" value="5" min="1" max="20" style="width:62px" />
+        </label>
+        <label><input type="checkbox" id="stream" checked /> 流式输出</label>
+      </div>
+      <div class="input-row">
+        <textarea id="q" placeholder="输入你的问题，例如：信息增益和基尼指数有什么区别？（Ctrl + Enter 发送）"></textarea>
+        <button id="send">提问</button>
+      </div>
+      <div class="examples" id="examples"></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <h2>检索链路</h2>
+    <div class="stats" id="stats">
+      <div class="stat"><b id="stDense">–</b><span>向量召回</span></div>
+      <div class="stat"><b id="stSparse">–</b><span>BM25 召回</span></div>
+      <div class="stat"><b id="stFused">–</b><span>融合候选</span></div>
+      <div class="stat"><b id="stMs">–</b><span>检索耗时 (ms)</span></div>
+    </div>
+    <h2>引用片段</h2>
+    <div id="contexts"><div class="ctx"><div class="text">提问后这里会显示每个片段来自哪一章、命中了哪一路检索、以及各自的分数。</div></div></div>
+  </aside>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const messages = $('messages');
+const EXAMPLES = [
+  '信息增益和基尼指数有什么区别？',
+  'SVM 的惩罚系数 C 变大或变小分别会怎样？',
+  'K-means 里 K 该怎么选？',
+  '为什么不能在测试集上反复调参？',
+  '梯度消失是怎么产生的，ReLU 为什么能缓解？',
+];
+
+EXAMPLES.forEach(t => {
+  const s = document.createElement('span');
+  s.textContent = t;
+  s.onclick = () => { $('q').value = t; $('q').focus(); };
+  $('examples').appendChild(s);
+});
+
+function addMsg(who, text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + who;
+  const label = document.createElement('div');
+  label.className = 'who';
+  label.textContent = who === 'user' ? '你' : (who === 'bot' ? '助教' : '系统');
+  const body = document.createElement('div');
+  body.className = 'body';
+  body.textContent = text;
+  wrap.append(label, body);
+  messages.appendChild(wrap);
+  messages.scrollTop = messages.scrollHeight;
+  return body;
+}
+
+// 把正文里的 [n] 变成可点击的引用标记
+function renderCitations(el, text) {
+  el.innerHTML = '';
+  const parts = text.split(/(\[\d+\])/g);
+  for (const part of parts) {
+    const m = part.match(/^\[(\d+)\]$/);
+    if (m) {
+      const chip = document.createElement('span');
+      chip.className = 'cite-chip';
+      chip.textContent = m[1];
+      chip.onclick = () => {
+        const target = document.querySelector(`.ctx[data-idx="${m[1]}"]`);
+        if (target) { target.classList.add('open'); target.scrollIntoView({behavior:'smooth', block:'center'}); }
+      };
+      el.appendChild(chip);
+    } else {
+      el.appendChild(document.createTextNode(part));
+    }
+  }
+}
+
+function pillClass(ch) {
+  if (ch.includes('rerank')) return 'rerank';
+  if (ch.includes('hybrid')) return 'hybrid';
+  if (ch.includes('sparse')) return 'sparse';
+  return 'dense';
+}
+
+function renderContexts(contexts, citations) {
+  const box = $('contexts');
+  box.innerHTML = '';
+  if (!contexts || !contexts.length) {
+    box.innerHTML = '<div class="ctx"><div class="text">没有召回任何片段。</div></div>';
+    return;
+  }
+  const citeMap = {};
+  (citations || []).forEach(c => citeMap[c.chunk_id] = c.index);
+  contexts.forEach(ctx => {
+    const div = document.createElement('div');
+    div.className = 'ctx';
+    if (citeMap[ctx.chunk_id]) div.dataset.idx = citeMap[ctx.chunk_id];
+    const head = document.createElement('div');
+    head.className = 'head';
+    const path = document.createElement('div');
+    path.className = 'path';
+    path.textContent = (citeMap[ctx.chunk_id] ? `[${citeMap[ctx.chunk_id]}] ` : '') +
+      ctx.source_path + (ctx.section_path ? ' > ' + ctx.section_path : '');
+    const pill = document.createElement('span');
+    pill.className = 'pill ' + pillClass(ctx.channel);
+    pill.textContent = ctx.channel + ' · ' + (ctx.score ?? 0).toFixed(3);
+    head.append(path, pill);
+    const text = document.createElement('div');
+    text.className = 'text';
+    text.textContent = ctx.text;
+    div.append(head, text);
+    div.onclick = e => { if (e.target.tagName !== 'SPAN') div.classList.toggle('open'); };
+    box.appendChild(div);
+  });
+}
+
+function renderStats(trace) {
+  if (!trace) return;
+  $('stDense').textContent = trace.dense_hits ?? '–';
+  $('stSparse').textContent = trace.sparse_hits ?? '–';
+  $('stFused').textContent = trace.fused_hits ?? '–';
+  $('stMs').textContent = (trace.stage_ms ? Object.values(trace.stage_ms).reduce((a,b)=>a+b,0) : 0).toFixed(0);
+}
+
+async function loadHealth() {
+  try {
+    const r = await fetch('/api/health');
+    const h = await r.json();
+    $('kbName').textContent = h.config.knowledge_base;
+    const bi = $('badgeIndex');
+    bi.textContent = h.ready ? `索引就绪 · ${h.index.vectors} 向量 / ${h.index.bm25} 片段` : '索引为空，请先建索引';
+    bi.className = 'badge ' + (h.ready ? 'ok' : 'warn');
+    const bl = $('badgeLlm');
+    bl.textContent = h.backends.llm.has_key ? `${h.backends.llm.model}` : '无 Key · 抽取式降级';
+    bl.className = 'badge ' + (h.backends.llm.has_key ? 'ok' : 'warn');
+    $('badgeVec').textContent = `向量：${h.backends.embedding.provider}:${h.backends.embedding.model}`;
+  } catch (e) {
+    $('badgeIndex').textContent = '无法连接服务';
+    $('badgeIndex').className = 'badge warn';
+  }
+}
+
+let busy = false;
+async function ask() {
+  const question = $('q').value.trim();
+  if (!question || busy) return;
+  busy = true;
+  $('send').disabled = true;
+  addMsg('user', question);
+  $('q').value = '';
+
+  const payload = {
+    question,
+    top_k: parseInt($('topK').value, 10),
+    mode: $('mode').value,
+  };
+
+  if (!$('stream').checked) {
+    const body = addMsg('bot', '检索并生成中…');
+    try {
+      const r = await fetch('/api/query', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || '请求失败');
+      body.textContent = '';
+      renderCitations(body, data.answer);
+      const meta = document.createElement('div');
+      meta.className = 'meta-line';
+      meta.innerHTML = `<span>模型：${data.model}</span><span>端到端：${Math.round(data.latency_ms)} ms</span>` +
+        (data.refused ? '<span style="color:var(--warn)">已拒答：知识库中无依据</span>' : '');
+      body.parentElement.appendChild(meta);
+      renderContexts(data.contexts, data.citations);
+      renderStats(data.trace);
+    } catch (e) {
+      body.textContent = '出错了：' + e.message;
+    } finally {
+      busy = false; $('send').disabled = false;
+    }
+    return;
+  }
+
+  // ---- 流式 ----
+  const body = addMsg('bot', '');
+  const meta = document.createElement('div');
+  meta.className = 'meta-line';
+  let answerText = '';
+  try {
+    const resp = await fetch('/api/query/stream', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.detail || ('HTTP ' + resp.status));
+    }
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, {stream: true});
+      const blocks = buf.split('\n\n');
+      buf = blocks.pop();
+      for (const block of blocks) {
+        const evMatch = block.match(/^event: (\w+)/m);
+        const dataMatch = block.match(/^data: (.*)$/m);
+        if (!evMatch || !dataMatch) continue;
+        const ev = evMatch[1];
+        const data = JSON.parse(dataMatch[1]);
+        if (ev === 'meta') {
+          renderContexts(data.contexts, data.citations);
+          renderStats(data.trace);
+        } else if (ev === 'delta') {
+          answerText += data.text;
+          renderCitations(body, answerText);
+          messages.scrollTop = messages.scrollHeight;
+        } else if (ev === 'done') {
+          body.parentElement.appendChild(meta);
+          meta.innerHTML = `<span>模型：${data.model}</span>` +
+            (data.refused ? '<span style="color:var(--warn)">已拒答：知识库中无依据</span>' : '');
+        } else if (ev === 'error') {
+          answerText += '\n[错误] ' + data.message;
+          renderCitations(body, answerText);
+        }
+      }
+    }
+  } catch (e) {
+    body.textContent = '出错了：' + e.message;
+  } finally {
+    busy = false; $('send').disabled = false;
+  }
+}
+
+$('send').onclick = ask;
+$('q').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); ask(); }
+});
+loadHealth();
+</script>
+</body>
+</html>
