@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 
 from ..config import ROOT_DIR, settings
 from ..eval.runner import load_tasks, save_report, run_agent_eval
-from ..runtime.agent import Agent
+from ..runtime.factory import build_agent
 from ..runtime.trace_store import TraceStore
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     settings.ensure_dirs()
     STATE["store"] = TraceStore()
     try:
-        STATE["agent"] = Agent()
+        STATE["agent"] = build_agent()
         logger.info("Agent 就绪：%s", STATE["agent"].brain.label)
     except Exception as exc:            # 工具装配失败也要让服务起得来
         logger.warning("Agent 初始化失败：%s", exc)

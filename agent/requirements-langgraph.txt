@@ -1,0 +1,20 @@
+# ---------------------------------------------------------------------------
+# AgentLab · LangGraph 引擎（**可选**依赖）
+#
+# 手写循环版（默认）不需要这个文件。只有想跑 LangGraph 引擎时才装：
+#     pip install -r requirements-langgraph.txt
+#
+# 【为什么钉住 <1.0 —— 不要去掉这个上界】
+# langgraph 1.x 要求 langchain-core>=1.4.7，装它会强制把 rag 项目依赖的
+# langchain-core 0.3.86 升到 1.x，连带破坏 langchain / langchain-chroma，
+# 直接连累 CourseRAG。实测 0.6.11 是最后一个与 langchain-core 0.3.x
+# 干净共存的版本，只新增 langgraph-checkpoint / -prebuilt / -sdk / ormsgpack
+# 四个包，不动其它依赖。
+#
+# 装完请务必跑一次 `pip check` 确认无冲突。
+# ---------------------------------------------------------------------------
+langgraph>=0.6,<1.0
+
+# 可选：把 checkpoint 持久化到 SQLite，让「中断 → 换进程 → 续跑」成为可能。
+# 不装则退化为 InMemorySaver（同进程内可恢复）。
+# langgraph-checkpoint-sqlite>=2.0.0

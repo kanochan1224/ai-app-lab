@@ -149,6 +149,8 @@ class ToolSettings:
 @dataclass
 class Settings:
     project_name: str = "AgentLab"
+    # 主循环实现：loop（手写，默认，无额外依赖）/ langgraph（状态图，需可选依赖）
+    engine: str = field(default_factory=lambda: _env("AGENT_ENGINE", "loop"))
     brain: BrainSettings = field(default_factory=BrainSettings)
     guard: GuardSettings = field(default_factory=GuardSettings)
     tools: ToolSettings = field(default_factory=ToolSettings)
@@ -168,6 +170,7 @@ class Settings:
 
     def describe(self) -> dict[str, str]:
         return {
+            "engine": self.engine,
             "brain": self.brain.mode_label,
             "guard": (
                 f"max_steps={self.guard.max_steps} "

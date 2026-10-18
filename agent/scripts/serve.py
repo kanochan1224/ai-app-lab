@@ -32,9 +32,9 @@ def main() -> None:
 
     if not args.skip_preflight:
         try:
-            from app.runtime.agent import Agent
+            from app.runtime.factory import build_agent
 
-            agent = Agent()
+            agent = build_agent()
             report = agent.preflight()
             print("-" * 72)
             print(f"  决策后端：{report['brain']}")

@@ -18,7 +18,7 @@ from app.eval.runner import (                          # noqa: E402
     run_agent_eval,
     save_report,
 )
-from app.runtime.agent import Agent                    # noqa: E402
+from app.runtime.factory import build_agent            # noqa: E402
 
 
 def main() -> None:
@@ -26,15 +26,21 @@ def main() -> None:
     parser.add_argument("--dataset", type=str, default=None, help="任务集路径")
     parser.add_argument("--limit", type=int, default=None, help="只跑前 N 条")
     parser.add_argument("--tag", type=str, default="", help="报告文件名标签")
+    parser.add_argument(
+        "--engine",
+        choices=["loop", "langgraph"],
+        default=None,
+        help="主循环实现（默认取 AGENT_ENGINE，即 loop）",
+    )
     args = parser.parse_args()
 
     tasks = load_tasks(Path(args.dataset) if args.dataset else None)
     if args.limit:
         tasks = tasks[: args.limit]
 
-    agent = Agent()
+    agent = build_agent(args.engine)
     print("=" * 78)
-    print(f"决策后端：{agent.brain.label}")
+    print(f"决策引擎：{getattr(agent, 'engine', '?')}    决策后端：{agent.brain.label}")
     if agent.cfg.brain.is_mock:
         print(
             "⚠️  当前为离线 mock 策略（未配置 LLM_API_KEY）。\n"
@@ -44,7 +50,7 @@ def main() -> None:
     print("=" * 78)
 
     report = run_agent_eval(agent, tasks, store=None)
-    json_path, md_path = save_report(report, tag=args.tag)
+    json_path, md_path = save_report(report, tag=args.tag or getattr(agent, "engine", ""))
 
     print("-" * 78)
     print(f"任务成功率      : {report.success_rate:.1%}")

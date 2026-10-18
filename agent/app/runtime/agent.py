@@ -38,7 +38,14 @@ from ..tools.base import ToolContext, ToolRegistry
 
 
 class Agent:
-    """一个可观测、有防护的多步工具调用 Agent。"""
+    """一个可观测、有防护的多步工具调用 Agent。
+
+    这是**手写循环**实现（默认引擎）。同目录下的 ``langgraph_agent.py``
+    用 LangGraph 状态图实现了同一套语义，对外契约完全一致，可通过
+    ``AGENT_ENGINE`` 切换。``engine`` 属性会写进评估报告，便于两版对比。
+    """
+
+    engine = "loop"
 
     def __init__(
         self,
@@ -283,40 +290,53 @@ class Agent:
 
         这个检查很有必要：很多「Agent 不工作」其实是索引没建、没联网、
         或没配 Key，提前暴露比让用户看一堆空结果好得多。
+
+        实现放在模块级 ``build_preflight``，两个引擎共用同一份——
+        否则两套实现很容易对「工具到底可不可用」给出不同结论。
         """
-        report: dict[str, Any] = {
-            "brain": self.cfg.brain.mode_label,
-            "is_mock": self._mock_warning,
-            "tools": {},
-        }
-        for name in self.registry.names():
-            report["tools"][name] = self._probe(name)
-        return report
+        return build_preflight(self.cfg, self.registry, self._mock_warning)
 
-    def _probe(self, name: str) -> dict[str, Any]:
-        from ..tools.course_kb import CourseKBTool
 
-        tool = self.registry.get(name)
-        if isinstance(tool, CourseKBTool):
-            # 工具会自动降级到内置知识库，所以这里报告「实际用的是哪个」，
-            # 而不是简单地把 course-rag 缺失当成不可用
-            count = tool.chunk_count
-            source = tool.source_label
-            if count == 0:
-                return {"status": "empty", "detail": "知识库为空"}
-            status = "degraded" if "内置" in source else "ok"
-            return {"status": status, "detail": f"{count} 个片段 · {source}"}
-        if name in {"web_search", "fetch_url"}:
-            try:
-                import httpx
+def build_preflight(cfg: Settings, registry: ToolRegistry, is_mock: bool) -> dict[str, Any]:
+    """启动自检（两个引擎共用）。
 
-                httpx.head("https://www.bing.com", timeout=6.0, follow_redirects=True)
-                return {"status": "ok", "detail": "网络可达"}
-            except Exception as exc:
-                return {"status": "degraded", "detail": f"联网不可达：{type(exc).__name__}"}
-        if name == "run_python":
-            return {"status": "ok", "detail": f"沙箱目录 {self.cfg.workspace_dir}"}
-        return {"status": "ok", "detail": "本地工具"}
+    很多「Agent 不工作」其实是索引没建、没联网、或没配 Key，
+    提前暴露比让用户看一堆空结果好得多。
+    """
+    from ..tools.course_kb import CourseKBTool
+
+    report: dict[str, Any] = {
+        "brain": cfg.brain.mode_label,
+        "is_mock": is_mock,
+        "tools": {},
+    }
+    for name in registry.names():
+        report["tools"][name] = _probe_tool(cfg, registry, name, CourseKBTool)
+    return report
+
+
+def _probe_tool(cfg: Settings, registry: ToolRegistry, name: str, course_kb_cls: Any) -> dict[str, Any]:
+    tool = registry.get(name)
+    if isinstance(tool, course_kb_cls):
+        # 工具会自动降级到内置知识库，所以这里报告「实际用的是哪个」，
+        # 而不是简单地把 course-rag 缺失当成不可用
+        count = tool.chunk_count
+        source = tool.source_label
+        if count == 0:
+            return {"status": "empty", "detail": "知识库为空"}
+        status = "degraded" if "内置" in source else "ok"
+        return {"status": status, "detail": f"{count} 个片段 · {source}"}
+    if name in {"web_search", "fetch_url"}:
+        try:
+            import httpx
+
+            httpx.head("https://www.bing.com", timeout=6.0, follow_redirects=True)
+            return {"status": "ok", "detail": "网络可达"}
+        except Exception as exc:
+            return {"status": "degraded", "detail": f"联网不可达：{type(exc).__name__}"}
+    if name == "run_python":
+        return {"status": "ok", "detail": f"沙箱目录 {cfg.workspace_dir}"}
+    return {"status": "ok", "detail": "本地工具"}
 
 
 def _json(value: Any) -> str:

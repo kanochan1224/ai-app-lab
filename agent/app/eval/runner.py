@@ -198,12 +198,14 @@ class AgentEvalReport:
     outcomes: list[TaskOutcome] = field(default_factory=list)
     brain: str = ""
     is_mock: bool = False
+    engine: str = "loop"          # 主循环实现（loop / langgraph），两版对比要用
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "samples": self.samples,
             "brain": self.brain,
             "is_mock": self.is_mock,
+            "engine": self.engine,
             "metrics": {
                 "success_rate": self.success_rate,
                 "avg_coverage": self.avg_coverage,
@@ -275,12 +277,14 @@ def run_agent_eval(
         outcomes=outcomes,
         brain=agent.brain.label,
         is_mock=agent.cfg.brain.is_mock,
+        engine=getattr(agent, "engine", "loop"),
     )
 
 
 def report_to_markdown(report: AgentEvalReport) -> str:
     lines = ["# AgentLab 任务评估报告", ""]
     lines.append(f"- 生成时间：{time.strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append(f"- 决策引擎：**{report.engine}**")
     lines.append(f"- 决策后端：**{report.brain}**")
     lines.append(f"- 任务数：{report.samples}")
     lines.append("")
